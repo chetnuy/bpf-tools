@@ -1,0 +1,26 @@
+#!/usr/local/bin/bpftrace
+/*
+ * kmem - Summarize kernel memory allocations.
+ *
+ * See BPF Performance Tools, Chapter 14, for an explanation of this tool.
+ *
+ * Copyright (c) 2019 Brendan Gregg.
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * This was originally created for the BPF Performance Tools book
+ * published by Addison Wesley. ISBN-13: 9780136554820
+ * When copying or porting, include this comment.
+ *
+ * 15-Mar-2019  Brendan Gregg   Created this.
+ */
+
+BEGIN
+{
+	printf("Tracing kmem allocation stacks (kmalloc, kmem_cache_alloc). ");
+	printf("Hit Ctrl-C to end.\n");
+}
+
+tracepoint:kmem:kmalloc,
+tracepoint:kmem:kmem_cache_alloc
+{
+	@bytes[kstack(5), comm] = stats(args->bytes_alloc);
+}

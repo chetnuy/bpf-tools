@@ -1,0 +1,33 @@
+#!/usr/local/bin/bpftrace
+/*
+ * eperm - Count failed EPERM and EACCES syscalls.
+ *
+ * See BPF Performance Tools, Chapter 11, for an explanation of this tool.
+ *
+ * Copyright (c) 2019 Brendan Gregg.
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * This was originally created for the BPF Performance Tools book
+ * published by Addison Wesley. ISBN-13: 9780136554820
+ * When copying or porting, include this comment.
+ *
+ * 25-Feb-2019  Brendan Gregg   Created this.
+ */
+
+BEGIN
+{
+	printf("Tracing EACCESS and EPERM syscall errors. Ctrl-C to end.\n");
+}
+
+tracepoint:raw_syscalls:sys_exit
+/args->ret == -1/
+{
+	@EACCESS[comm, ksym(*(kaddr("sys_call_table") + args->id * 8))] =
+	    count();
+}
+
+tracepoint:raw_syscalls:sys_exit
+/args->ret == -13/
+{
+	@EPERM[comm, ksym(*(kaddr("sys_call_table") + args->id * 8))] =
+	    count();
+}
